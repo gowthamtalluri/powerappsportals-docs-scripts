@@ -1,0 +1,19 @@
+
+//When you use this function make sure you pass primary and reference entity logical name and french column logical name parameters
+//make sure param id is not null 
+{% if requestparamsid %}
+        {% assign primaryentityobject = entities[primaryentityobjectlogicalname][requestparamsid] %}
+//make sure object is not NULL
+{% if primaryentityobject %}
+        {% assign referenceentityobjectid = primaryentityobject[primaryentitylookupfieldlogicalname].id %}
+ 
+        {% assign referenceentityobject = entities[referenceentityobjectlogicalname][referenceentityobjectid] %}
+//make sure object is not NULL
+{% if referenceentityobject %}
+//make sure attribute value is not NULL
+{% unless referenceentityobject[referenceentityfrenchfieldlogicalname]  == empty %} 
+        {% assign frenchName = referenceentityobject[referenceentityfrenchfieldlogicalname] %}
+{% endunless %}
+{% endif %}
+{% endif %}
+{% endif %}
