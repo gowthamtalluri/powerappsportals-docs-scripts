@@ -1,0 +1,78 @@
+if (window.jQuery) {
+   (function ($) {
+      $(document).ready(function () {
+         
+         const commentlabelId = "ac_comment_label";
+         const commentId = "ac_comment";
+         const numberofdaysAvailableID = "ac_numberofdaysavailable";
+         let errorMessageForComment = "When entered less than or equal to 10 days then comment is mandatory.";
+         {% if website.selected_language.Code == "fr-FR" %}
+         errorMessageForComment = "Lorsqu’il est saisi moins de 10 jours ou égal à 10 jours, le commentaire est obligatoire.";
+         {% endif %}
+         const commentIDJquerySelector ="#"+commentId;
+         const numberofdaysAvailableIDJquerySelector ="#"+numberofdaysAvailableID;
+         if (!(typeof (Page_Validators) == 'undefined')){ 
+         // Create new validator
+         var newValidator = document.createElement('span');
+         newValidator.style.display = "none";
+         newValidator.id = "commentValidator";
+         newValidator.controltovalidate = commentId;
+         newValidator.errormessage = "<a href='#"+commentlabelId+"' referencecontrolid='"+commentId+"' onclick='javascript:scrollToAndFocus(\""+commentlabelId+"\",\""+commentId+"\");return false;'>"+errorMessageForComment+"</a>";
+         newValidator.validationGroup = ""; // Set this if you have set ValidationGroup on the form
+         newValidator.initialvalue = "";
+         newValidator.evaluationfunction = function () {
+       var numberOfAvailableDays = $(numberofdaysAvailableIDJquerySelector).val();
+       if (numberOfAvailableDays == null || numberOfAvailableDays == "") return true; // check if number of days value is not empty'.
+       if(isNaN(numberOfAvailableDays)) return true; //check if days is not a number
+       if(parseInt(numberOfAvailableDays)>10) return true; //check if days aer greate than 10
+       // only require comment if entered days are less than 10.
+       var value = $(commentIDJquerySelector).val();
+       if (value == null || value.trim() == "") {
+       return false;
+       } else {
+          return true;
+       }
+         };
+        
+         // Add the new validator to the page validators array:
+         Page_Validators.push(newValidator);
+      }     
+         //End of validator
+
+//Below function to set comment mandatory
+         var ac_numberofdaysavailable = document.getElementById(numberofdaysAvailableID);
+         ac_numberofdaysavailable.addEventListener("change", commentValidator);
+
+function commentValidator() {
+  var numberOfDaysAviailableElement = document.getElementById(numberofdaysAvailableID);
+  var numberOfAvailableDays = numberOfDaysAviailableElement.value;
+  if (numberOfAvailableDays == null || numberOfAvailableDays == "") return; // check if number of days value is not empty'.
+  if(isNaN(numberOfAvailableDays)) return; //check if days is not a number
+       var commentLabelElement = document.getElementById(commentlabelId); 
+        var getInfoTagElement = getImmediateParentInfoDiv(commentLabelElement);
+        if( getInfoTagElement == null) return; 
+         //check if days are greater than 10     
+  if(parseInt(numberOfAvailableDays)>10) {
+   if(getInfoTagElement.classList.contains("required")){
+  getInfoTagElement.classList.remove("required");
+  
+}return;}
+        getInfoTagElement.classList.add("required");
+ 
+}
+function getImmediateParentInfoDiv(childElement) {
+   let parent = childElement.parentElement;
+ 
+   while (parent) {
+     if (parent.tagName.toLowerCase() === 'div' && parent.classList.contains("info")) {
+       return parent;
+     }
+     parent = parent.parentElement;
+   }
+ 
+   // Return null if no parent div is found
+   return null;
+ }
+      });
+   }(window.jQuery));
+}
