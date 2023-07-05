@@ -1,0 +1,117 @@
+$(document).ready(function() {
+    //Clear the funding opportunity field
+    $("#nrcan_fundingopportunity").empty();
+
+    //set Competition (Funding Opportunity)
+    setCompetitionLookup();
+    $("#nrcan_organizationtype").change(onOrganizationTypeChange);
+    onOrganizationTypeChange();
+
+    //Update Country Names based on language
+    $('#nrcan_parentcompanycountry > option').each(function() {
+        let currentCountry = $(this).text();
+        let startPositionOfEnglishName = currentCountry.search('-');
+        let startPositionOfFrenchName = currentCountry.search('/');
+        if ($('html').attr('data-lang') == 'en') {
+            $(this).text(currentCountry.slice(startPositionOfEnglishName + 1, startPositionOfFrenchName - 1));
+        } else {
+            $(this).text(currentCountry.slice(startPositionOfFrenchName + 2));
+        }
+    });
+});
+
+function setCompetitionLookup(){
+    var fundingOpp="";
+    var urlVars = getUrlVars();
+    var competitionID = urlVars["opp"];
+    var oDataUrl = "/_api/egcs_fo_profiles(" + competitionID + ")?$select=egcs_name";
+    webapi.safeAjax({
+        type: "GET",
+        url: oDataUrl,
+        contentType: "application/json",
+        success: function (result) {
+            fundingOpp = result.egcs_name;
+            if (fundingOpp != ""){
+            $("#nrcan_fundingopportunity").append($('<option>', { value: competitionID, text: fundingOpp, selected: true}));
+                //For Lookup
+                $("#nrcan_fundingopportunity_name").attr("value", fundingOpp);
+                $("#nrcan_fundingopportunity").attr("value", competitionID);
+                $("#nrcan_fundingopportunity_entityname").attr("value", "egcs_fo_profile");
+            }
+        }
+    });   
+}
+
+function onOrganizationTypeChange(){
+     var val = $("#nrcan_organizationtype option:selected").val();
+    if (val == "200000010"){
+        $('#nrcan_organizationtypeother').parent().parent().show();
+        MakeRequired("nrcan_organizationtypeother");        
+    } else {
+        $('#nrcan_organizationtypeother').parent().parent().hide();
+        MakeNotRequired("nrcan_organizationtypeother");
+    }
+
+}
+//Make mandatory field
+var MakeRequired = function (fieldName) {
+    try {
+        if ($("#" + fieldName) != undefined) {
+            $("#" + fieldName).prop('required', true);
+            $("#" + fieldName).closest(".control").prev().addClass("required");
+            // Create new validator
+            var Requiredvalidator = document.createElement('span');
+            Requiredvalidator.style.display = "none";
+            Requiredvalidator.id = fieldName + "Validator";
+            Requiredvalidator.controltovalidate = fieldName;
+            Requiredvalidator.errormessage = "<a href='#" + fieldName + "_label'>" + $("#" + fieldName + "_label").html() + " is a required field.</a>";
+            Requiredvalidator.initialvalue = "";
+            Requiredvalidator.evaluationfunction = function () {
+                var value = $("#" + fieldName).val();
+                if (value == null || value == "") {
+                    return false;
+                } else {
+                    return true;
+                }
+            };
+ 
+            // Add the new validator to the page validators array:
+            Page_Validators.push(Requiredvalidator);
+        }
+    }
+    catch (error) {
+        errorHandler(error);
+    }
+}
+//Make UnMandatory
+var MakeNotRequired = function (fieldName) {
+    try {
+        if ($("#" + fieldName) != undefined) {
+            $("#" + fieldName).closest(".control").prev().removeClass("required");
+            $("#" + fieldName).prop('required', false);
+ 
+            for (i = 0; i < Page_Validators.length; i++) {
+                if (Page_Validators[i].id == fieldName + "Validator") {
+                    Page_Validators.splice(i);
+                }
+            }
+        }
+    }
+    catch (error) {
+        errorHandler(error);
+    }
+}
+
+// Read a page's GET URL variables and return them as an associative array.
+function getUrlVars()
+{
+    var vars = [], hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++)
+    {
+        hash = hashes[i].split('=');
+        vars.push(hash[0]);
+        vars[hash[0]] = hash[1];
+    }
+    return vars;
+}
