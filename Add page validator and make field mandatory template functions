@@ -115,3 +115,93 @@ function getUrlVars()
     }
     return vars;
 }
+
+
+
+
+some one else code
+
+
+//Make mandatory field
+var MakeRequired = function (fieldName, bookmark) {
+    try {
+        if ($("#" + fieldName) != undefined && $("#" + fieldName).val() != undefined) {
+            $("#" + fieldName).prop('required', true);
+            $("#" + fieldName).closest(".control").prev().addClass("required");
+            $("#" + fieldName + "_label").closest(".info").addClass("required");
+
+            var validator = null;
+            for (i = 0; i < Page_Validators.length; i++) {
+                if (Page_Validators[i].id == fieldName + "MakeRequiredValidator") {
+                    validator = Page_Validators[i];
+                    break;
+                }
+            }
+            if (validator == null) {
+                // Create new validator
+                var Requiredvalidator = document.createElement('span');
+                Requiredvalidator.style.display = "none";
+                Requiredvalidator.id = fieldName + "MakeRequiredValidator";
+                Requiredvalidator.controltovalidate = fieldName;
+                //                if (isFrenchPage)
+                //                    Requiredvalidator.errormessage = "<a href='#" + fieldName + "_label'>Le champ « " + $("#" + fieldName + "_label").html() + " » est obligatoire.</a>";
+                //                else
+                //                    Requiredvalidator.errormessage = "<a href='#" + fieldName + "_label'>" + $("#" + fieldName + "_label").html() + " is a required field.</a>";
+                if (bookmark != undefined) {
+                    if (isFrenchPage)
+                        Requiredvalidator.errormessage = "<a href='#" + bookmark + "'>Le champ « " + $("#" + fieldName + "_label").html() + " » est obligatoire.</a>";
+                    else
+                        Requiredvalidator.errormessage = "<a href='#" + bookmark + "'>" + $("#" + fieldName + "_label").html() + " is a required field.</a>";
+                }
+                else {
+                    if (isFrenchPage)
+                        Requiredvalidator.errormessage = "<a href='#" + fieldName + "'>Le champ « " + $("#" + fieldName + "_label").html() + " » est obligatoire.</a>";
+                    else
+                        Requiredvalidator.errormessage = "<a href='#" + fieldName + "'>" + $("#" + fieldName + "_label").html() + " is a required field.</a>";
+                }
+                Requiredvalidator.initialvalue = "";
+                Requiredvalidator.evaluationfunction = function () {
+                    //var value = $("#" + fieldName).val();
+                    var value = null;
+                    if (document.getElementById(fieldName) != null) {
+                        value = document.getElementById(fieldName).value;
+                        if (value == null || value == "") {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
+                };
+
+                // Add the new validator to the page validators array:
+                Page_Validators.push(Requiredvalidator);
+            }
+        }
+    }
+    catch (error) {
+        errorHandler(error);
+    }
+};
+//Make UnMandatory
+var MakeNotRequired = function (fieldName) {
+    try {
+        if ($("#" + fieldName) != undefined) {
+            $("#" + fieldName).closest(".control").prev().removeClass("required");
+            $("#" + fieldName).closest(".control").prev().prevAll().removeClass("required");
+            $("#" + fieldName).prop('required', false);
+
+            for (i = 0; i < Page_Validators.length; i++) {
+                if (Page_Validators[i].id == fieldName + "MakeRequiredValidator") {
+                    Page_Validators.splice(i,1);
+                    break;
+                } else if (Page_Validators[i].id == "RequiredFieldValidator" + fieldName) {
+                    Page_Validators.splice(i, 1);
+                    break;
+                }
+            }
+        }
+    }
+    catch (error) {
+        errorHandler(error);
+    }
+};
