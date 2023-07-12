@@ -1,0 +1,182 @@
+$(document).ready(function (){
+    $(this).on("hidden.bs.modal", function() { 
+        $("#correspondence .subgrid").trigger("refresh"); 
+        });    
+});
+
+
+//Sharepoint File Upload with virus scan and  get Document Meatada
+
+
+  {% assign corrId = request.params.id %}
+  $(document).ready(function(){
+
+
+var settings = {
+    "url": "https://intra.ws2.dev.gwy.apic.sus.ebc.gov.on.ca:443/ops-dev/ops-intra/1.0/avscan-rest",
+    "method": "POST",
+    "timeout": 0,
+    "headers": {
+      "X-IBM-Client-Id": "71eb392825d5168f0cc6284bde2fb065",
+      "X-IBM-Client-Secret": "62d75b02b999e4d837126b3aea189aaa"
+    },
+  "processData": false,
+  "mimeType": "multipart/form-data",
+  "contentType": false,
+  beforeSend: function(){
+
+   }
+  };
+var virusFound;
+var scanfornewfiles;
+
+//when new files are added
+$("input[type='file']").on('click',function(){
+   virusFound = true;
+   scanfornewfiles = true;
+   $(".virus-message").remove();
+    });
+
+$("button[data-dismiss='modal']").on('click',function(){
+ $(".virus-message").remove();
+});
+
+$("button[title='Add files']").on('click',function(e){
+
+if(virusFound){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+}else{
+  return;
+}
+
+var promises = [];
+var responses = [];
+
+    filesList = document.querySelector("input[type=file]").files;
+
+if(scanfornewfiles){
+   $(this).html("Virus Scan in progress... ");
+    $(this).attr("disabled", "disabled").prepend("<span class='fa fa-spinner fa-pulse' aria-hidden='true'></span> ");
+  scanfornewfiles = false;
+    for(file of filesList){
+        var form = new FormData();
+        form.append("client_app", "test");
+            form.append("file_data",file);   
+            settings.data = form;
+            console.log(settings.data);
+       var request = $.ajax(settings).done(function(response){
+         responses.push(response);
+       })
+       .fail(function(msg){
+          $(".modal-dialog .add-file").prepend("<span class='virus-message bg-danger'>An Error has occured. Please contact support</span>");
+       })
+       .always(function(){
+         //$("button[title='Add files']").prop("disabled", false).find(".fa-pulse").remove();
+         //$("button[title='Add files']").html(window.ResourceManager["Add_Files"]);
+       });
+
+       promises.push( request);
+    }
+
+    $.when.apply(null, promises).done(function(){
+    debugger;
+    var goodToUpload = true;
+      $("button[title='Add files']").prop("disabled", false).find(".fa-pulse").remove();
+      $("button[title='Add files']").html(window.ResourceManager["Add_Files"]);
+   
+    for(response of responses){
+      responseVal = JSON.parse(response);
+      console.log(responseVal.scan_message);
+      if(responseVal.scan_result == "FAIL" && responseVal.status_code == "403"){
+        goodToUpload = false;
+        $(".modal-dialog .add-file").prepend("<span class='virus-message bg-danger'>Virus Detected in "+responseVal.file_uri+" Please Upload another file</span>");
+        return;
+      }else if(responseVal.scan_result == "PASS" && responseVal.status_code == "200"){
+        virusFound = false;
+         $(".virus-message").remove();
+        $("button[title='Add files']").trigger('click');
+        
+      }else{
+        goodToUpload = false;
+        $(".modal-dialog .add-file").prepend("<span class='virus-message bg-danger'>An Error has occured. Please contact support</span>");
+        return;
+      }
+    }
+    /*if(goodToUpload){
+      virusFound = false;
+      $("button[title='Add files']").trigger('click');
+    }*/
+
+});
+
+}
+
+});
+
+
+$(".form-close").on('click',function(e){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    $("#UpdateButton").trigger('click');
+    });
+
+var sharepointUrl = $(".sharepoint-grid").attr("data-url-get");
+
+$("a.add-folder.btn.btn-info.action").hide();
+
+    $(this).on("hidden.bs.modal", function() {
+      var corrId = "{{corrId}}";
+        getDocumentMeatada(corrId, sharepointUrl, function(response){
+          var resultObj = { olt_documentcount: 0, olt_documentsize: 0 };
+          getAggregateDocumentInfo(corrId,response.SharePointItems, resultObj);
+
+          updateDocumentMetadata(corrId,resultObj,function(response){
+              console.log(response);
+          });
+
+        });
+
+});
+
+
+});
+
+
+function getAggregateDocumentInfo(corrId,documentArray,resultObj){
+    for(sharepintDocument of documentArray){
+        resultObj.olt_documentsize += (sharepintDocument.FileSize)/1000000;
+        if(!sharepintDocument.IsFolder){
+            resultObj.olt_documentcount++;
+        }
+    }
+}
+
+var getDocumentMeatada = function(efileCorrespondeneid, sharepointUrl, response){
+    try {
+        webapi.safeAjax({
+            type: "POST",
+            url: sharepointUrl,
+            contentType: "application/json",
+            data: JSON.stringify({
+                regarding: {
+                    Id: efileCorrespondeneid,
+                    LogicalName: "olt_efilecorrespondence",
+                    "Name": null,
+                    "KeyAttributes": [],
+                    "RowVersion": null
+                },
+                sortExpression: "FileLeafRef ASC",
+                page: 1,
+                pageSize: 100,
+                folderPath: ""
+            }),
+            success: function (res) {
+                response(res);
+            }
+        });
+    } catch (error) {
+        errorHandler(error);
+    }
+
+};
