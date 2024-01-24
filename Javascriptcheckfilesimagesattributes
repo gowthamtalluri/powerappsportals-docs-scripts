@@ -1,4 +1,4 @@
-
+//This applies to power apps portals and in general javascript language for images check
 if (window.jQuery) {
 	(function ($) {
 		$(document).ready(function () {
