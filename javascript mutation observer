@@ -1,0 +1,37 @@
+/*------------------------------------------------------- Function for mutation observer  -------------------------------------------------------- */
+/* Author(s): Gowtham T. */
+    /**
+     * Function to observe DOM mutations and call a callback when an element with the specified class name is present.
+     * @param {string} className - The class name of the target elements.
+     * @param {function} callback - The function to call when the target elements are present.
+     */
+    function onDOMObserveForClass(className, callback) {
+        if (typeof className !== 'string' || !className.trim()) {
+            return;
+        }
+
+        if (typeof callback !== 'function') {
+            return;
+        }
+
+        function checkAndExecuteCallback() {
+            var elements = document.getElementsByClassName(className);
+            if (elements.length > 0) {
+                callback(className);
+                return true;
+            }
+            return false;
+        }
+
+        // Check if elements are already loaded
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            if (checkAndExecuteCallback()) return;
+        }
+
+        // Use MutationObserver to watch for new elements being added to the DOM
+        var observer = new MutationObserver(function(mutations, obs) {
+            if (checkAndExecuteCallback()) {
+                // Disconnect the observer once the elements are found and callback executed
+                obs.disconnect();
+            }
+        });
