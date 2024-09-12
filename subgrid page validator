@@ -1,0 +1,50 @@
+function setSubgridRequired(fieldLogicalName,errormessagetxt,isRequired) {
+  try {
+      const fieldControlId = "#" + fieldLogicalName;
+    if($(fieldControlId) != undefined){
+    if(isRequired){
+      var subgridValidatorExists = Page_Validators.some(function (validator) {
+        return validator.id === fieldLogicalName + "Validator";
+        });
+        console.log("subgridValidatorExists value is "+ subgridValidatorExists);
+        if (!subgridValidatorExists){
+              var subgridValidator = document.createElement('span');
+                  subgridValidator.style.display = "none";
+                  subgridValidator.id = fieldLogicalName + "Validator";
+                  subgridValidator.controltovalidate = fieldLogicalName;
+                  subgridValidator.errormessage = "<a href='"+fieldControlId+"'>" + errormessagetxt +"</a>";
+                  subgridValidator.validationGroup = ""; // Set this if you have set ValidationGroup on the form
+                  subgridValidator.initialvalue = "";
+                  subgridValidator.evaluationfunction = function () {
+                    var subgridselector= fieldControlId+" > div > div.view-grid.table-responsive > table > tbody tr";
+                    console.log("selector:" +subgridselector);
+                      if ($(subgridselector).length === 0) {
+                          return false;
+                      } else {
+                          return true;
+                      }
+                  };
+                  Page_Validators.push(subgridValidator);
+                }
+                else {
+                  Page_Validators = Page_Validators.filter(function (validator) {
+                      return validator.id !== fieldLogicalName + "Validator";
+                  });
+              }
+
+            }
+            else{
+              //remove the validator from the array of existing validators on the page
+             for (i=0; i < Page_Validators.length; i++){
+                if (Page_Validators[i].id == fieldLogicalName + "Validator") {
+                   Page_Validators.splice(i);
+                }
+              }
+            }
+      
+    }
+  } catch (error) {
+      //errorHandler(error);
+      console.log("error is "+error);
+  }
+}
