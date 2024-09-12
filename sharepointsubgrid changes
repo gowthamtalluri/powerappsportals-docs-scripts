@@ -1,0 +1,64 @@
+$(document).ready(function () {
+
+    let uploadstatmentText = "{{snippets['UploadstatementText']}}";
+	let fileTypeErrorText = "{{snippets['fileTypeErrorText']}}";
+    //hide the Tab Title
+    $(".tab-title").closest("h2").remove();
+
+    //Hide New Folder button
+    $("a.add-folder.btn.btn-info.action").hide();
+    //Hide Add Files Button
+    $("a.add-file.btn.btn-primary.action").hide();
+	$('a.add-file.btn.btn-primary.action').html(`<span class="fa fa-plus-circle" aria-hidden="true"></span> ${uploadstatmentText}`);
+
+    //Allow only 1 file to upload
+    $(".modal-add-file .margin-addfile input").removeAttr("multiple");
+    //Set Accepted File types
+    $(".modal-add-file .margin-addfile input").prop("accept", ".pdf, .jpg, .jpeg, .jpe, .jif, .jfif, .tif, .tiff, .png, .bmp, .xlsx, .xls, .csv");
+
+    //Hide the Add Files button if more than one entry
+
+        // Select the target node.
+    var target = document.querySelector('.sharepoint-loading')
+
+    // Create an observer instance.
+    var observer = new MutationObserver(function(mutations) {
+        //do stuff  
+        //Hide no file/folder message
+        $(".sharepoint-empty.message").hide();
+        $("div.col-sm-9.checkbox").hide();
+        var rowCount = 0;
+        rowCount = $("#revenue_document table tbody tr").length;
+        if (rowCount <= 0) {
+            $("a.add-file.btn.btn-primary.action").show();
+        } else {
+            $("a.add-file.btn.btn-primary.action").hide();
+        }
+    });
+
+    // Pass in the target node, as well as the observer options.
+    observer.observe(target, {
+        attributes:    true,
+        childList:     true,
+        characterData: true
+    });
+    $(".modal-add-file .margin-addfile input").change(function() {
+        $('.alert.alert-danger').hide();
+        var self = $(this);
+ 
+        // loop through each file to validate that the type is correct
+       
+        $.each(self[0].files, function(i, e) {
+        var validTypes = ['application/pdf', 'image/jpg', 'image/jpeg', 'image/jpe', 'image/jif', 'image/jfif', 'image/tif', 'image/tiff', 'image/png', 'image/bmp','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel','application/csv'];
+        if (validTypes.indexOf(e.type) < 0) {
+            var alertmessage = fileTypeErrorText;
+            $('div.modal-body').before('<div class="alert alert-danger"><strong>'+alertmessage+'</strong></div>');
+            self.val('');
+            return false;
+        }
+        else {
+            $('.alert.alert-danger').hide();
+        }
+    });
+    });
+ });
